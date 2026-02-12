@@ -1,0 +1,18 @@
+{
+  "name": "taskflow-pro",
+  "version": "1.0.0",
+  "description": "Application de gestion de tâches collaboratif",
+  "scripts": {
+    "install-all": "npm install && cd server/client && npm install && cd ../.. && cd server && npm install",
+    "client": "cd server/client && npm start",
+    "server": "cd server && npm run dev",
+    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "build": "cd server/client && npm run build",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "db:init": "mysql -u root -p < database/schema.sql"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.1"
+  }
+}
