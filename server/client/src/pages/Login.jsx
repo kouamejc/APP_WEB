@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import styled from "styled-components";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-hot-toast";
+import { buildApiUrl } from "../utils/api";
 import {
     PageWrap,
     PageTitle,
@@ -48,7 +49,7 @@ export default function Login() {
         }
         try {
             setLoading(true);
-            const res = await fetch("/api/auth/login", {
+            const res = await fetch(buildApiUrl("/auth/login"), {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -58,12 +59,14 @@ export default function Login() {
             });
             if (!res.ok) {
                 let message = "Erreur connexion";
-                try {
-                    const data = await res.json();
-                    message = data && data.error ? data.error : message;
-                } catch (error) {
-                    const text = await res.text();
-                    if (text) message = text;
+                const raw = await res.text();
+                if (raw) {
+                    try {
+                        const data = JSON.parse(raw);
+                        message = data && data.error ? data.error : message;
+                    } catch (error) {
+                        message = raw;
+                    }
                 }
                 throw new Error(message);
             }

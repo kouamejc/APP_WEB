@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { toast } from "react-hot-toast";
+import { buildApiUrl } from "../utils/api";
 
 const AppStoreContext = createContext(null);
 
@@ -31,7 +32,7 @@ export function AppStoreProvider({ children }) {
                 return "collaborateur";
             }
         })();
-        const res = await fetch(`/api${path}`, {
+        const res = await fetch(buildApiUrl(path), {
             method: options.method || "GET",
             headers: {
                 "Content-Type": "application/json",

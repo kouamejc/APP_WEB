@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import styled from 'styled-components';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
+import { buildApiUrl } from '../utils/api';
 import {
   PageWrap,
   PageTitle,
@@ -61,7 +62,7 @@ export default function Register() {
     }
     try {
       setLoading(true);
-      const res = await fetch('/api/auth/register', {
+      const res = await fetch(buildApiUrl('/auth/register'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

@@ -1,5 +1,6 @@
 require('dotenv').config();
 const express = require('express');
+const cors = require('cors');
 const { sequelize } = require('./models');
 const projectsRoutes = require('./routes/projects');
 const tasksRoutes = require('./routes/tasks');
@@ -13,6 +14,12 @@ const app = express();
 
 // Middleware
 app.use(express.json());
+app.use(
+  cors({
+    origin: process.env.APP_URL ? [process.env.APP_URL] : true,
+    allowedHeaders: ["Content-Type", "x-user-role"]
+  })
+);
 
 app.use('/api/projects', projectsRoutes);
 app.use('/api/tasks', tasksRoutes);
