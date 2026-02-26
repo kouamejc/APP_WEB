@@ -7,6 +7,9 @@ const tasksRoutes = require('./routes/tasks');
 const discussionsRoutes = require('./routes/discussions');
 const notificationsRoutes = require('./routes/notifications');
 const teamsRoutes = require('./routes/teams');
+const usersRoutes = require('./routes/users');
+const rolesRoutes = require('./routes/roles');
+const permissionsRoutes = require('./routes/permissions');
 const authRoutes = require('./routes/auth');
 const { seedRolesAndAdmin } = require('./seed/seedRoles');
 
@@ -26,6 +29,9 @@ app.use('/api/tasks', tasksRoutes);
 app.use('/api/discussions', discussionsRoutes);
 app.use('/api/notifications', notificationsRoutes);
 app.use('/api/teams', teamsRoutes);
+app.use('/api/users', usersRoutes);
+app.use('/api/roles', rolesRoutes);
+app.use('/api/permissions', permissionsRoutes);
 app.use('/api/auth', authRoutes);
 
 // Routes

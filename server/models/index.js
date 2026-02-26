@@ -14,6 +14,9 @@ const RolePermission = require('./RolePermission')(sequelize, DataTypes);
 Project.hasMany(Task, { foreignKey: 'projectId', onDelete: 'CASCADE' });
 Task.belongsTo(Project, { foreignKey: 'projectId' });
 
+Task.hasMany(Discussion, { foreignKey: 'taskId', onDelete: 'CASCADE' });
+Discussion.belongsTo(Task, { foreignKey: 'taskId' });
+
 Discussion.hasMany(Message, {
   foreignKey: 'discussionId',
   as: 'messages',

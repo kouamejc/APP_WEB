@@ -46,9 +46,11 @@ export default function Register() {
     prenoms: '',
     email: '',
     telephone: '',
-    ville: ''
+    ville: '',
+    password: ''
   });
   const [loading, setLoading] = useState(false);
+  const strongPasswordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
 
   const updateField = (field) => (event) => {
     setForm((prev) => ({ ...prev, [field]: event.target.value }));
@@ -56,8 +58,12 @@ export default function Register() {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    if (!form.nom.trim() || !form.prenoms.trim() || !form.email.trim() || !form.telephone.trim() || !form.ville.trim()) {
+    if (!form.nom.trim() || !form.prenoms.trim() || !form.email.trim() || !form.telephone.trim() || !form.ville.trim() || !form.password.trim()) {
       toast.error('Veuillez remplir tous les champs requis.');
+      return;
+    }
+    if (!strongPasswordRegex.test(form.password)) {
+      toast.error('Mot de passe: 8+ caracteres avec lettre, chiffre et symbole.');
       return;
     }
     try {
@@ -70,7 +76,8 @@ export default function Register() {
           prenoms: form.prenoms.trim(),
           email: form.email.trim(),
           telephone: form.telephone.trim(),
-          ville: form.ville.trim()
+          ville: form.ville.trim(),
+          password: form.password
         })
       });
       if (!res.ok) {
@@ -120,6 +127,11 @@ export default function Register() {
           <FieldGroup>
             <label>Ville</label>
             <Input value={form.ville} onChange={updateField('ville')} placeholder="Abidjan" />
+          </FieldGroup>
+          <FieldGroup>
+            <label>Mot de passe</label>
+            <Input type="password" value={form.password} onChange={updateField('password')} placeholder="Ex: Abc@1234" />
+            <SubtleText>8+ caracteres avec lettre, chiffre et symbole.</SubtleText>
           </FieldGroup>
           <Actions>
             <PrimaryButton type="submit" disabled={loading}>

@@ -5,7 +5,11 @@ const router = express.Router();
 
 router.get('/', async (req, res) => {
   try {
+    const { taskId } = req.query;
+    const where = {};
+    if (taskId) where.taskId = taskId;
     const discussions = await Discussion.findAll({
+      where,
       include: [{ model: Message, as: 'messages' }],
       order: [['createdAt', 'DESC'], [{ model: Message, as: 'messages' }, 'createdAt', 'ASC']]
     });
@@ -17,15 +21,15 @@ router.get('/', async (req, res) => {
 
 router.post('/', async (req, res) => {
   try {
-    const { id, title, message } = req.body;
+    const { id, title, message, taskId, author } = req.body;
     if (!id || !title || !message) {
       return res.status(400).json({ error: 'id, title et message sont requis.' });
     }
-    const discussion = await Discussion.create({ id, title });
+    const discussion = await Discussion.create({ id, title, taskId: taskId || null });
     await Message.create({
       id: `${id}-m1`,
       discussionId: discussion.id,
-      author: 'Vous',
+      author: author || 'Vous',
       body: message
     });
     const full = await Discussion.findByPk(discussion.id, {

@@ -38,13 +38,13 @@ const Actions = styled.div `
 export default function Login() {
     const navigate = useNavigate();
     const [email, setEmail] = useState("");
-    const [telephone, setTelephone] = useState("");
+    const [password, setPassword] = useState("");
     const [loading, setLoading] = useState(false);
 
     const handleSubmit = async(event) => {
         event.preventDefault();
-        if (!email.trim() || !telephone.trim()) {
-            toast.error("Email et telephone requis.");
+        if (!email.trim() || !password.trim()) {
+            toast.error("Email et mot de passe requis.");
             return;
         }
         try {
@@ -54,7 +54,7 @@ export default function Login() {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     email: email.trim(),
-                    telephone: telephone.trim(),
+                    password: password
                 }),
             });
             if (!res.ok) {
@@ -81,51 +81,40 @@ export default function Login() {
         }
     };
 
-    return ( <
-        AuthWrap >
-        <
-        AuthCard as = "form"
-        onSubmit = { handleSubmit } >
-        <
-        PageTitle > Connexion < /PageTitle> <
-        SubtleText > Accedez a votre espace avec vos identifiants. < /SubtleText> <
-        div style = {
-            { display: "grid", gap: "1rem", marginTop: "1.5rem" } } >
-        <
-        FieldGroup >
-        <
-        label > Email < /label> <
-        Input type = "email"
-        value = { email }
-        onChange = {
-            (event) => setEmail(event.target.value) }
-        placeholder = "exemple@email.com" /
-        >
-        <
-        /FieldGroup> <
-        FieldGroup >
-        <
-        label > Numero de telephone < /label> <
-        Input value = { telephone }
-        onChange = {
-            (event) => setTelephone(event.target.value) }
-        placeholder = "07 00 00 00 00" /
-        >
-        <
-        /FieldGroup> <
-        Actions >
-        <
-        PrimaryButton type = "submit"
-        disabled = { loading } > { loading ? "Connexion..." : "Se connecter" } <
-        /PrimaryButton> <
-        GhostButton as = { Link }
-        to = "/register"
-        type = "button" >
-        Creer un compte <
-        /GhostButton> <
-        /Actions> <
-        /div> <
-        /AuthCard> <
-        /AuthWrap>
+    return (
+        <AuthWrap>
+            <AuthCard as="form" onSubmit={handleSubmit}>
+                <PageTitle>Connexion</PageTitle>
+                <SubtleText>Accedez a votre espace avec vos identifiants.</SubtleText>
+                <div style={{ display: "grid", gap: "1rem", marginTop: "1.5rem" }}>
+                    <FieldGroup>
+                        <label>Email</label>
+                        <Input
+                            type="email"
+                            value={email}
+                            onChange={(event) => setEmail(event.target.value)}
+                            placeholder="exemple@email.com"
+                        />
+                    </FieldGroup>
+                    <FieldGroup>
+                        <label>Mot de passe</label>
+                        <Input
+                            type="password"
+                            value={password}
+                            onChange={(event) => setPassword(event.target.value)}
+                            placeholder="Votre mot de passe"
+                        />
+                    </FieldGroup>
+                    <Actions>
+                        <PrimaryButton type="submit" disabled={loading}>
+                            {loading ? "Connexion..." : "Se connecter"}
+                        </PrimaryButton>
+                        <GhostButton as={Link} to="/register" type="button">
+                            Creer un compte
+                        </GhostButton>
+                    </Actions>
+                </div>
+            </AuthCard>
+        </AuthWrap>
     );
 }

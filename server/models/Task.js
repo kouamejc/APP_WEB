@@ -10,7 +10,19 @@ module.exports = (sequelize, DataTypes) =>
         type: DataTypes.STRING,
         allowNull: false
       },
+      description: {
+        type: DataTypes.TEXT,
+        allowNull: true
+      },
       projectId: {
+        type: DataTypes.STRING,
+        allowNull: true
+      },
+      assignedTo: {
+        type: DataTypes.STRING,
+        allowNull: true
+      },
+      assignedToName: {
         type: DataTypes.STRING,
         allowNull: true
       },

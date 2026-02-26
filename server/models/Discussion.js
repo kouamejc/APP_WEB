@@ -9,6 +9,10 @@ module.exports = (sequelize, DataTypes) =>
       title: {
         type: DataTypes.STRING,
         allowNull: false
+      },
+      taskId: {
+        type: DataTypes.STRING,
+        allowNull: true
       }
     },
     {

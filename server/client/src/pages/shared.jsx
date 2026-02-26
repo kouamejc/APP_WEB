@@ -53,7 +53,7 @@ export const FieldGroup = styled.div`
   gap: 0.4rem;
 `;
 
-export const Input = styled.input`
+export const Input = styled.input.attrs({ required: true })`
   padding: 0.8rem 0.95rem;
   border-radius: 10px;
   border: 1px solid ${(props) => props.theme.colors.border};
@@ -66,7 +66,7 @@ export const Input = styled.input`
   }
 `;
 
-export const Select = styled.select`
+export const Select = styled.select.attrs({ required: true })`
   padding: 0.8rem 0.95rem;
   border-radius: 10px;
   border: 1px solid ${(props) => props.theme.colors.border};
@@ -79,7 +79,7 @@ export const Select = styled.select`
   }
 `;
 
-export const Textarea = styled.textarea`
+export const Textarea = styled.textarea.attrs({ required: true })`
   padding: 0.8rem 0.95rem;
   border-radius: 10px;
   border: 1px solid ${(props) => props.theme.colors.border};

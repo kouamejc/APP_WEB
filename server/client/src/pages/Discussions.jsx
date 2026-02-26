@@ -9,23 +9,26 @@ import {
     FieldGroup,
     Input,
     Textarea,
+    Select,
     PrimaryButton,
     GhostButton,
     EmptyState,
 } from "./shared";
 
 export default function Discussions() {
-    const { discussions, addDiscussion, addDiscussionReply } = useAppStore();
+    const { discussions, tasks, addDiscussion, addDiscussionReply } = useAppStore();
     const [title, setTitle] = useState("");
     const [message, setMessage] = useState("");
+    const [taskId, setTaskId] = useState("");
     const [replyMap, setReplyMap] = useState({});
 
     const handleCreate = (event) => {
         event.preventDefault();
         if (!title.trim() || !message.trim()) return;
-        addDiscussion({ title: title.trim(), message: message.trim() });
+        addDiscussion({ title: title.trim(), message: message.trim(), taskId });
         setTitle("");
         setMessage("");
+        setTaskId("");
     };
 
     const handleReply = (discussionId) => {
@@ -65,6 +68,20 @@ export default function Discussions() {
                             placeholder="Votre message d'ouverture..."
                         />
                     </FieldGroup>
+                    <FieldGroup>
+                        <label>Associer a une tache</label>
+                        <Select
+                            value={taskId}
+                            onChange={(event) => setTaskId(event.target.value)}
+                        >
+                            <option value="">Aucune</option>
+                            {tasks.map((task) => (
+                                <option key={task.id} value={task.id}>
+                                    {task.title}
+                                </option>
+                            ))}
+                        </Select>
+                    </FieldGroup>
                     <PrimaryButton type="submit">
                         Creer la discussion
                     </PrimaryButton>
@@ -77,6 +94,13 @@ export default function Discussions() {
                     {discussions.map((discussion) => (
                         <Card key={discussion.id}>
                             <PageTitle>{discussion.title}</PageTitle>
+                            {discussion.taskId ? (
+                                <SubtleText>
+                                    Tache:{" "}
+                                    {tasks.find((task) => task.id === discussion.taskId)?.title ||
+                                        "Tache associee"}
+                                </SubtleText>
+                            ) : null}
                             <div
                                 style={{
                                     marginTop: "1rem",

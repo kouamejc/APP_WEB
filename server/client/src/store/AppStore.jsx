@@ -12,6 +12,17 @@ const emptyState = {
     tasks: [],
     discussions: [],
     notifications: [],
+    users: [],
+    roles: [],
+    permissions: [],
+};
+
+const getCurrentUser = () => {
+    try {
+        return JSON.parse(localStorage.getItem("app_user") || "null");
+    } catch (error) {
+        return null;
+    }
 };
 
 export function AppStoreProvider({ children }) {
@@ -60,12 +71,15 @@ export function AppStoreProvider({ children }) {
                     return [];
                 }
             };
-            const [projects, tasks, discussions, notifications] =
+            const [projects, tasks, discussions, notifications, users, roles, permissions] =
                 await Promise.all([
                     safeFetch("/projects"),
                     safeFetch("/tasks"),
                     safeFetch("/discussions"),
                     safeFetch("/notifications"),
+                    safeFetch("/users"),
+                    safeFetch("/roles"),
+                    safeFetch("/permissions"),
                 ]);
             if (!active) return;
             setData({
@@ -73,6 +87,9 @@ export function AppStoreProvider({ children }) {
                 tasks,
                 discussions,
                 notifications,
+                users,
+                roles,
+                permissions,
             });
         };
         load();
@@ -80,6 +97,13 @@ export function AppStoreProvider({ children }) {
             active = false;
         };
     }, []);
+
+    const getUserDisplayNameById = (userId) => {
+        if (!userId) return "";
+        const user = data.users.find((item) => item.id === userId);
+        if (!user) return "";
+        return `${user.firstName || ""} ${user.lastName || ""}`.trim();
+    };
 
     const addNotification = async (payload, options = {}) => {
         try {
@@ -105,6 +129,69 @@ export function AppStoreProvider({ children }) {
                 else if (created.type === "warning") toast(message, { icon: "⚠️" });
                 else toast(message);
             }
+        } catch (error) {
+            // ignore
+        }
+    };
+
+    const addUser = async (payload) => {
+        try {
+            const next = {
+                id: createId(),
+                firstName: payload.firstName,
+                lastName: payload.lastName,
+                email: payload.email,
+                phone: payload.phone,
+                city: payload.city,
+                role: payload.role || "collaborateur",
+                createdAt: new Date().toISOString(),
+            };
+            const created = await apiRequest("/users", {
+                method: "POST",
+                body: next,
+            });
+            setData((prev) => ({
+                ...prev,
+                users: [created, ...prev.users],
+            }));
+            addNotification(
+                {
+                    title: "Nouveau membre",
+                    body: `Utilisateur "${created.firstName} ${created.lastName}" ajoute.`,
+                    type: "success",
+                },
+                { silentToast: true },
+            );
+            toast.success("Utilisateur ajoute");
+        } catch (error) {
+            toast.error("Impossible d'ajouter l'utilisateur");
+        }
+    };
+
+    const updateUser = async (userId, updates) => {
+        try {
+            const updated = await apiRequest(`/users/${userId}`, {
+                method: "PATCH",
+                body: updates,
+            });
+            setData((prev) => ({
+                ...prev,
+                users: prev.users.map((user) =>
+                    user.id === userId ? updated : user,
+                ),
+            }));
+        } catch (error) {
+            // ignore
+        }
+    };
+
+    const deleteUser = async (userId) => {
+        try {
+            await apiRequest(`/users/${userId}`, { method: "DELETE" });
+            setData((prev) => ({
+                ...prev,
+                users: prev.users.filter((user) => user.id !== userId),
+            }));
         } catch (error) {
             // ignore
         }
@@ -198,10 +285,21 @@ export function AppStoreProvider({ children }) {
 
     const addTask = async (payload) => {
         try {
+            const currentUser = getCurrentUser();
+            const selectedAssignee = payload.assignedTo || currentUser?.id || "";
+            const selectedAssigneeName =
+                payload.assignedToName ||
+                getUserDisplayNameById(selectedAssignee) ||
+                (currentUser
+                    ? `${currentUser.firstName || ""} ${currentUser.lastName || ""}`.trim()
+                    : "");
             const next = {
                 id: createId(),
                 title: payload.title,
+                description: payload.description || "",
                 projectId: payload.projectId || "",
+                assignedTo: selectedAssignee || "",
+                assignedToName: selectedAssigneeName || "",
                 status: payload.status || "todo",
                 dueDate: payload.dueDate || "",
                 createdAt: new Date().toISOString(),
@@ -232,10 +330,23 @@ export function AppStoreProvider({ children }) {
                 (currentTask && currentTask.title) ||
                 updates.title ||
                 "Tache";
+            const nextAssignedTo =
+                updates.assignedTo !== undefined
+                    ? updates.assignedTo
+                    : currentTask?.assignedTo;
+            const nextAssignedToName =
+                updates.assignedToName !== undefined
+                    ? updates.assignedToName
+                    : currentTask?.assignedToName;
             const updated = await apiRequest(`/tasks/${taskId}`, {
                 method: "PUT",
                 body: {
                     ...updates,
+                    assignedTo: nextAssignedTo || "",
+                    assignedToName:
+                        nextAssignedToName ||
+                        getUserDisplayNameById(nextAssignedTo) ||
+                        "",
                     updatedAt: new Date().toISOString(),
                 },
             });
@@ -276,16 +387,6 @@ export function AppStoreProvider({ children }) {
 
     const updateTaskStatus = async (taskId, status) => {
         try {
-            const rawUser = (() => {
-                try {
-                    return JSON.parse(localStorage.getItem("app_user") || "null");
-                } catch (error) {
-                    return null;
-                }
-            })();
-            const rawRole = `${rawUser?.role || rawUser?.roles || rawUser?.profil || ""}`.toLowerCase();
-            const role = rawRole === "admin" ? "administrateur" : rawRole || "collaborateur";
-            if (role !== "administrateur") return;
             const currentTask = data.tasks.find((task) => task.id === taskId);
             const taskTitle =
                 (currentTask && currentTask.title) ||
@@ -314,6 +415,10 @@ export function AppStoreProvider({ children }) {
 
     const addDiscussion = async (payload) => {
         try {
+            const currentUser = getCurrentUser();
+            const author = currentUser
+                ? `${currentUser.firstName || ""} ${currentUser.lastName || ""}`.trim()
+                : "Vous";
             const next = {
                 id: createId(),
                 title: payload.title,
@@ -324,6 +429,8 @@ export function AppStoreProvider({ children }) {
                     id: next.id,
                     title: payload.title,
                     message: payload.message,
+                    taskId: payload.taskId || "",
+                    author,
                 },
             });
             setData((prev) => ({
@@ -342,13 +449,17 @@ export function AppStoreProvider({ children }) {
 
     const addDiscussionReply = async (discussionId, message) => {
         try {
+            const currentUser = getCurrentUser();
+            const author = currentUser
+                ? `${currentUser.firstName || ""} ${currentUser.lastName || ""}`.trim()
+                : "Vous";
             const reply = await apiRequest(
                 `/discussions/${discussionId}/messages`,
                 {
                     method: "POST",
                     body: {
                         messageId: createId(),
-                        author: "Vous",
+                        author,
                         body: message,
                     },
                 },
@@ -366,6 +477,20 @@ export function AppStoreProvider({ children }) {
         } catch (error) {
             // ignore
         }
+    };
+
+    const addTaskComment = async (taskId, message) => {
+        if (!message || !message.trim()) return;
+        const existing = data.discussions.find(
+            (discussion) => discussion.taskId === taskId,
+        );
+        if (existing) {
+            await addDiscussionReply(existing.id, message.trim());
+            return;
+        }
+        const task = data.tasks.find((item) => item.id === taskId);
+        const title = task ? `Commentaires: ${task.title}` : "Discussion de tache";
+        await addDiscussion({ title, message: message.trim(), taskId });
     };
 
     const markNotificationRead = async (notificationId, read) => {
@@ -402,6 +527,23 @@ export function AppStoreProvider({ children }) {
         }
     };
 
+    const updateRolePermissions = async (roleId, permissionIds) => {
+        try {
+            const updated = await apiRequest(`/roles/${roleId}/permissions`, {
+                method: "PUT",
+                body: { permissionIds },
+            });
+            setData((prev) => ({
+                ...prev,
+                roles: prev.roles.map((role) =>
+                    role.id === roleId ? updated : role,
+                ),
+            }));
+        } catch (error) {
+            // ignore
+        }
+    };
+
     const unreadCount = useMemo(
         () =>
             data.notifications.filter((notification) => !notification.read)
@@ -432,9 +574,14 @@ export function AppStoreProvider({ children }) {
             deleteTask,
             addDiscussion,
             addDiscussionReply,
+            addTaskComment,
             addNotification,
+            addUser,
+            updateUser,
+            deleteUser,
             markNotificationRead,
             markAllNotificationsRead,
+            updateRolePermissions,
             getProjectProgress,
         }),
         [data, unreadCount],

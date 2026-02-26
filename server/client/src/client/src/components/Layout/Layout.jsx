@@ -215,7 +215,7 @@ const FieldGroup = styled.div `
   gap: 0.4rem;
 `;
 
-const Input = styled.input `
+const Input = styled.input.attrs({ required: true })`
   padding: 0.75rem 0.9rem;
   border-radius: 10px;
   border: 1px solid #e5e7eb;
@@ -227,7 +227,7 @@ const Input = styled.input `
   }
 `;
 
-const Textarea = styled.textarea `
+const Textarea = styled.textarea.attrs({ required: true })`
   padding: 0.75rem 0.9rem;
   border-radius: 10px;
   border: 1px solid #e5e7eb;
@@ -241,7 +241,7 @@ const Textarea = styled.textarea `
   }
 `;
 
-const Select = styled.select `
+const Select = styled.select.attrs({ required: true })`
   padding: 0.75rem 0.9rem;
   border-radius: 10px;
   border: 1px solid #e5e7eb;
@@ -334,7 +334,7 @@ function Layout() {
                     .includes(query),
             ),
             tasks: tasks.filter((task) =>
-                `${task.title} ${task.status || ""} ${task.dueDate || ""}`
+                `${task.title} ${task.description || ""} ${task.status || ""} ${task.dueDate || ""} ${task.assignedToName || ""}`
                     .toLowerCase()
                     .includes(query),
             ),
@@ -379,6 +379,7 @@ function Layout() {
             if (!formState.title.trim()) return;
             addTask({
                 title: formState.title.trim(),
+                description: formState.description.trim(),
                 projectId: formState.projectId,
                 status: formState.status,
                 dueDate: formState.dueDate,
@@ -572,14 +573,22 @@ function Layout() {
                     </SearchBar>
                     <UserMenu>
                         <div style={{ fontSize: "0.9rem", color: "#5b6460" }}>
-                            Administrateur
+                            {(() => {
+                                if (!currentUser) return "Utilisateur";
+                                const first = `${currentUser.firstName || ""}`.trim();
+                                const last = `${currentUser.lastName || ""}`.trim();
+                                if (first && last && first.toLowerCase() !== last.toLowerCase()) {
+                                    return `${first} ${last}`;
+                                }
+                                if (first) return first;
+                                if (last) return last;
+                                return "Utilisateur";
+                            })()}
                         </div>
-                        {currentRole === "administrateur" && (
-                            <CreateButton onClick={() => setCreateOpen(true)}>
-                                <FiPlus />
-                                Creer
-                            </CreateButton>
-                        )}
+                        <CreateButton onClick={() => setCreateOpen(true)}>
+                            <FiPlus />
+                            Creer
+                        </CreateButton>
                         <GhostButton
                             type="button"
                             onClick={() => {
@@ -654,7 +663,7 @@ function Layout() {
                                     placeholder="Nom ou titre"
                                 />
                             </FieldGroup>
-                            {createType === "project" && (
+                            {(createType === "project" || createType === "task") && (
                                 <FieldGroup>
                                     <label>Description</label>
                                     <Textarea
